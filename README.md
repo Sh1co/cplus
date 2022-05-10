@@ -5,7 +5,7 @@
 
 # Сplus
 
-Compiler for **C+** toy imperative language, based on [LLVM](https://llvm.org/docs/LangRef.html).
+Compiler for **C+** toy imperative language, based on [LLVM](https://llvm.org/docs/LangRef.html) 10.
 
 - For language syntax, semantics, and examples check [documentation.md](./docs/documentation.md)
 - For formal language grammar, check [grammar.md](./docs/grammar.md)
