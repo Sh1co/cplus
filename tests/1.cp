@@ -1,5 +1,16 @@
 type int is integer;
 
+routine multireturn(x: integer) : integer is
+    if x = 6 then
+         return 2;
+    else
+         return 3;
+    end
+
+   return 0;
+end
+
+
 routine main() : int is
     println "Hello C+";
     var tmp is 5;
@@ -75,6 +86,10 @@ routine main() : int is
     overkill.f2.f4[1] := 3.5;
 
     println overkill.f1 + overkill.f2.f3 + overkill.f2.f4[1] + 1;  # 7.5
-
+    
+    println "Multi return function: ";
+    println multireturn(6);
+    println multireturn(5);
+    
     return 0;
 end
