@@ -24,12 +24,14 @@ public:
     void visit(ast::IntType *it) override;
     void visit(ast::RealType *rt) override;
     void visit(ast::BoolType *bt) override;
+    void visit(ast::StringType *it) override;
     void visit(ast::ArrayType *at) override;
     void visit(ast::RecordType *rt) override;
     void visit(ast::FunctionType *ft) override;
     void visit(ast::IntLiteral *il) override;
     void visit(ast::RealLiteral *rl) override;
     void visit(ast::BoolLiteral *bl) override;
+    void visit(ast::StringLiteral *sl) override;
     void visit(ast::VariableDeclaration *vardecl) override;
     void visit(ast::Identifier *id) override;
     void visit(ast::UnaryExpression *exp) override;

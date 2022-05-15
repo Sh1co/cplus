@@ -43,7 +43,6 @@ IRGenerator::IRGenerator() {
 
 // Emits IR code as "ir.ll"
 void IRGenerator::generate() {
-    module->setTargetTriple(llvm::sys::getDefaultTargetTriple());
 
     std::string msg;
     llvm::raw_string_ostream out(msg);
