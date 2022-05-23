@@ -167,7 +167,7 @@ void IRGenerator::visit(ast::VariableDeclaration *var) {
                 p =pop_s();
             }
             else{
-                p = builder->CreateGlobalStringPtr(llvm::StringRef(), var->name);
+                p = builder->CreateGlobalStringPtr(llvm::StringRef(""), "strVar");
             }
             
             str_ptrs_table[var->name] = p;  // save a pointer to the array ptrs_table for later access.
@@ -556,7 +556,7 @@ void IRGenerator::visit(ast::BoolLiteral *bl) {
 }
 
 void IRGenerator::visit(ast::StringLiteral *sl) {
-    tmp_s = builder->CreateGlobalStringPtr(llvm::StringRef(*sl->value), "strVar");;
+    tmp_s = builder->CreateGlobalStringPtr(llvm::StringRef(*sl->value), "strVar");
     tmp_t = string_t;
 }
 
@@ -729,14 +729,24 @@ void IRGenerator::visit(ast::PrintStatement *stmt) {
 void IRGenerator::visit(ast::AssignmentStatement *stmt) {
     BLOCK_B("AssignmentStatement")
 
-    // id_loc is a pointer to the modifiable_primary to be accessed
+    
     stmt->id->accept(this);
-    auto id_loc = pop_p();
 
-    // exp is a Value* containing the new data
+    auto isString = pop_t()->isPointerTy();
+
     stmt->exp->accept(this);
-    auto exp = pop_v();
 
+    if(isString){
+        llvm::Value *p = pop_s();
+        str_ptrs_table[stmt->id->name] = p;
+        BLOCK_E("AssignmentStatement")
+        return;
+    }
+    
+    // id_loc is a pointer to the modifiable_primary to be accessed
+    auto id_loc = pop_p();
+    // exp is a Value* containing the new data
+    auto exp = pop_v();
     exp = cast_primitive(exp, builder->CreateLoad(id_loc)->getType(), exp->getType());
     
     builder->CreateStore(exp, id_loc);
