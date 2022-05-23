@@ -170,7 +170,7 @@ void IRGenerator::visit(ast::VariableDeclaration *var) {
                 p = builder->CreateGlobalStringPtr(llvm::StringRef(""), "strVar");
             }
             
-            str_ptrs_table[var->name] = p;  // save a pointer to the array ptrs_table for later access.
+            str_ptrs_table[var->name] = p;  // save a pointer to the array str_ptrs_table for later access.
             BLOCK_E("VariableDeclaration")
             return; 
         }
@@ -198,8 +198,18 @@ void IRGenerator::visit(ast::VariableDeclaration *var) {
     // dtype is not given, deduce dtype from initial value
     else {
         var->initial_value->accept(this);
-        initial_value = pop_v();
+
         dtype = pop_t();
+
+        if(dtype == string_t){
+            llvm::Value *p;
+            p =pop_s();
+            str_ptrs_table[var->name] = p;  // save a pointer to the array str_ptrs_table for later access.
+            BLOCK_E("VariableDeclaration")
+            return;
+        }
+
+        initial_value = pop_v();
         
         if(!dtype) {
             GERROR("Cannot deduce variable dtype from initializer")
