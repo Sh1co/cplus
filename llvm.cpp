@@ -73,6 +73,12 @@ llvm::Type *IRGenerator::pop_t() {
     return t;
 }
 
+llvm::Value *IRGenerator::pop_s(){
+    llvm::Value *t = tmp_s;
+    tmp_s = nullptr;
+    return t;
+}
+
 // handles primitive casting for AssignmentStatement and VariableDeclaration
 llvm::Value *IRGenerator::cast_primitive(llvm::Value *value, llvm::Type *explicit_type, llvm::Type *implicit_type) {
     if(explicit_type == implicit_type) {
@@ -150,6 +156,23 @@ void IRGenerator::visit(ast::VariableDeclaration *var) {
             t->accept(this);  // record fields will be created by this visit with "{var->name}." prefix.
             BLOCK_E("VariableDeclaration")
             return;
+        }
+
+        // dtype is a string
+        else if (var->dtype->getType() == ast::TypeEnum::STRING){
+            var->dtype->accept(this);
+            llvm::Value *p;
+            if(var->initial_value){
+                var->initial_value->accept(this);
+                p =pop_s();
+            }
+            else{
+                p = builder->CreateGlobalStringPtr(llvm::StringRef(), var->name);
+            }
+            
+            str_ptrs_table[var->name] = p;  // save a pointer to the array ptrs_table for later access.
+            BLOCK_E("VariableDeclaration")
+            return; 
         }
 
         // dtype is primitive
@@ -265,6 +288,12 @@ void IRGenerator::visit(ast::Identifier *id) {
     }
     else if(ptrs_table[id->name]) {
         p = ptrs_table[id->name];
+    }
+    else if(str_ptrs_table[id->name]){
+        tmp_v = str_ptrs_table[id->name];
+        tmp_t = tmp_v->getType();
+        BLOCK_E("Identifier")
+        return;
     }
     else {
         GERROR(id->name << " is not declared.")
@@ -455,6 +484,10 @@ void IRGenerator::visit(ast::BoolType *bt) {
     tmp_t = bool_t;
 }
 
+void IRGenerator::visit(ast::StringType *st) {
+    tmp_t = string_t;
+}
+
 // Sets tmp_p (pointer to the beginning of array)
 void IRGenerator::visit(ast::ArrayType *at) {
     BLOCK_B("ArrayType")
@@ -520,6 +553,11 @@ void IRGenerator::visit(ast::RealLiteral *rl) {
 void IRGenerator::visit(ast::BoolLiteral *bl) {
     tmp_v = llvm::ConstantInt::get(context, llvm::APInt(1, bl->value, false));
     tmp_t = bool_t;
+}
+
+void IRGenerator::visit(ast::StringLiteral *sl) {
+    tmp_s = builder->CreateGlobalStringPtr(llvm::StringRef(*sl->value), "strVar");;
+    tmp_t = string_t;
 }
 
 // Sets tmp_v (the function pointer)
@@ -655,6 +693,9 @@ void IRGenerator::visit(ast::PrintStatement *stmt) {
         }
         else if (dtype->isFloatingPointTy()) {
             fmt = stmt->endl ? fmt_f_ln : fmt_f;
+        }
+        else if(dtype->isPointerTy()){
+            fmt = stmt->endl ? fmt_s_ln : fmt_s;
         }
         else {
             std::cerr << RED << "[LLVM]: [ERROR]: Cannot print " << RESET << std::flush;
