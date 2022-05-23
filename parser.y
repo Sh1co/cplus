@@ -133,7 +133,10 @@ EXPRESSION :
     INT_VAL                           { $$ = std::make_shared<ast::IntLiteral>($1); }
     | REAL_VAL                        { $$ = std::make_shared<ast::RealLiteral>($1); }
     | BOOL_VAL                        { $$ = std::make_shared<ast::BoolLiteral>($1); }
-    | STRING                          { $$ = std::make_shared<ast::StringLiteral>($1); }
+    | STRING                          { 
+                                        $1 = $1.substr(1, $1.size()-2);
+                                        $$ = std::make_shared<ast::StringLiteral>(std::make_shared<std::string>($1)); 
+                                      }
     | ROUTINE_CALL                    { PDEBUG("ROUTINE_CALL_EXP") $$ = $1; }
     | B_L EXPRESSION B_R              { $$ = $2; }
     | NOT EXPRESSION                  { $$ = std::make_shared<ast::UnaryExpression>(ast::OperatorEnum::NOT, $2); }
