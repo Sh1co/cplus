@@ -21,10 +21,12 @@ struct RealType;
 struct BoolType;
 struct ArrayType;
 struct RecordType;
+struct StringType;
 struct FunctionType;
 struct IntLiteral;
 struct RealLiteral;
 struct BoolLiteral;
+struct StringLiteral;
 struct VariableDeclaration;
 struct RoutineDeclaration;
 struct Body;
@@ -46,12 +48,14 @@ public:
     virtual void visit(ast::IntType *it) = 0;
     virtual void visit(ast::RealType *it) = 0;
     virtual void visit(ast::BoolType *it) = 0;
+    virtual void visit(ast::StringType *it) = 0;
     virtual void visit(ast::ArrayType *at) = 0;
     virtual void visit(ast::RecordType *rt) = 0;
     virtual void visit(ast::FunctionType *ft) = 0;
     virtual void visit(ast::IntLiteral *il) = 0;
     virtual void visit(ast::RealLiteral *rl) = 0;
     virtual void visit(ast::BoolLiteral *bl) = 0;
+    virtual void visit(ast::StringLiteral *sl) = 0;
     virtual void visit(ast::VariableDeclaration *vardecl) = 0;
     virtual void visit(ast::Identifier *id) = 0;
     virtual void visit(ast::UnaryExpression *exp) = 0;
@@ -73,7 +77,7 @@ namespace ast {
 template <typename Node> using node_ptr = std::shared_ptr<Node>;
 
 // Enumerations
-enum class TypeEnum { EMPTY, INT, REAL, BOOL, ARRAY, RECORD, FUNCTION };
+enum class TypeEnum { EMPTY, INT, REAL, BOOL, ARRAY, RECORD, FUNCTION, STRING };
 enum class OperatorEnum { PLUS, MINUS, MUL, DIV, MOD, AND, OR, NOT, XOR, EQ, NEQ, LT, GT, LEQ, GEQ }; 
 
 // Base class for AST nodes
@@ -134,6 +138,14 @@ struct BoolType : Type {
 
     void accept(Visitor *v) override { v->visit(this); }
 };
+
+struct StringType : Type {
+    StringType() {}
+    TypeEnum getType() { return TypeEnum::STRING; }
+
+    void accept(Visitor *v) override { v->visit(this); }
+};
+
 
 struct ArrayType : Type {
     node_ptr<Expression> size;
@@ -229,6 +241,17 @@ struct BoolLiteral : Expression {
 
     BoolLiteral(bool value) {
         this->dtype = std::make_shared<BoolType>();
+        this->value = value;
+    }
+
+    void accept(Visitor *v) override { v->visit(this); }
+};
+
+struct StringLiteral : Expression {
+    node_ptr<std::string> value;
+
+    StringLiteral(node_ptr<std::string> value) {
+        this->dtype = std::make_shared<StringType>();
         this->value = value;
     }
 

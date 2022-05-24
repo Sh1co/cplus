@@ -44,6 +44,8 @@ bool TypeChecker::type_equal(node_ptr<Type> type1, node_ptr<Type> type2) {
 		return true;
 	if (std::dynamic_pointer_cast<BoolType> (type1) && std::dynamic_pointer_cast<BoolType> (type2))
 		return true;
+	if (std::dynamic_pointer_cast<StringType> (type1) && std::dynamic_pointer_cast<StringType> (type2))
+		return true;
 	
 	if ((std::dynamic_pointer_cast<IntType> (type1) ||
 		 std::dynamic_pointer_cast<RealType> (type1) ||
@@ -316,6 +318,10 @@ void TypeChecker::visit(ast::BoolType *bt) {
     GERROR("BoolType is visited")
 }
 
+void TypeChecker::visit(ast::StringType *st) {
+    GERROR("StringType is visited")
+}
+
 void TypeChecker::visit(ast::ArrayType *at) {
     BLOCK_B("ArrayType")
 
@@ -351,6 +357,10 @@ void TypeChecker::visit(ast::RealLiteral *rl) {
 
 void TypeChecker::visit(ast::BoolLiteral *bl) {
     type_ = std::make_shared<BoolType> ();
+}
+
+void TypeChecker::visit(ast::StringLiteral *sl) {
+    type_ = std::make_shared<StringType> ();
 }
 
 void TypeChecker::visit(ast::RoutineDeclaration *routine) {
@@ -432,8 +442,9 @@ void TypeChecker::visit(ast::PrintStatement *stmt) {
     	stmt->exp->accept(this);
     	if (!std::dynamic_pointer_cast <IntType> (type_) &&
     		!std::dynamic_pointer_cast <RealType> (type_) &&
-    		!std::dynamic_pointer_cast <BoolType> (type_)) {
-    		GERROR("Print operand is neither int nor real nor bool type")
+    		!std::dynamic_pointer_cast <BoolType> (type_) &&
+			!std::dynamic_pointer_cast <StringType> (type_)) {
+    		GERROR("Print operand is neither int nor real nor bool nor string type")
     	}
     }
 

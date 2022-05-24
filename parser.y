@@ -13,16 +13,16 @@
 %parse-param { cplus::Lexer &lexer }
 %parse-param { cplus::Shell &shell }
 
-%token VAR ID IS INT_VAL REAL_VAL BOOL_VAL    // var <identifier> is \d+ \d+\.\d+ true|false
-%token TYPE_KW INT_KW REAL_KW BOOL_KW         // type integer real boolean
-%token B_L B_R SB_L SB_R CB_L CB_R            // ( ) [ ] { }
-%token COLON SEMICOLON COMMA DDOT BECOMES     // : ; , . .. :=
-%token PLUS MINUS MUL DIV MOD                 // + - * / %
-%token AND OR XOR NOT                         // and or xor not
-%token LT GT EQ LEQ GEQ NEQ ARROW             // < > = <= >= /= ->
-%token ARRAY RECORD ROUTINE RETURN END        // array record routine return end
-%token PRINT PRINTLN STRING                   // print println <string>
-%token IF THEN ELSE WHILE FOR IN LOOP REVERSE // if then else while for in loop reverse
+%token VAR ID IS INT_VAL REAL_VAL BOOL_VAL      // var <identifier> is \d+ \d+\.\d+ true|false
+%token TYPE_KW INT_KW REAL_KW BOOL_KW STRING_KW // type integer real boolean string
+%token B_L B_R SB_L SB_R CB_L CB_R              // ( ) [ ] { }
+%token COLON SEMICOLON COMMA DDOT BECOMES       // : ; , . .. :=
+%token PLUS MINUS MUL DIV MOD                   // + - * / %
+%token AND OR XOR NOT                           // and or xor not
+%token LT GT EQ LEQ GEQ NEQ ARROW               // < > = <= >= /= ->
+%token ARRAY RECORD ROUTINE RETURN END          // array record routine return end
+%token PRINT PRINTLN STRING                     // print println <string>
+%token IF THEN ELSE WHILE FOR IN LOOP REVERSE   // if then else while for in loop reverse
 
 %type <std::string> ID STRING
 %type <long long> INT_VAL
@@ -133,6 +133,10 @@ EXPRESSION :
     INT_VAL                           { $$ = std::make_shared<ast::IntLiteral>($1); }
     | REAL_VAL                        { $$ = std::make_shared<ast::RealLiteral>($1); }
     | BOOL_VAL                        { $$ = std::make_shared<ast::BoolLiteral>($1); }
+    | STRING                          { 
+                                        $1 = $1.substr(1, $1.size()-2);
+                                        $$ = std::make_shared<ast::StringLiteral>(std::make_shared<std::string>($1)); 
+                                      }
     | ROUTINE_CALL                    { PDEBUG("ROUTINE_CALL_EXP") $$ = $1; }
     | B_L EXPRESSION B_R              { $$ = $2; }
     | NOT EXPRESSION                  { $$ = std::make_shared<ast::UnaryExpression>(ast::OperatorEnum::NOT, $2); }
@@ -171,6 +175,7 @@ PRIMITIVE_TYPE :
     INT_KW    { $$ = std::make_shared<ast::IntType>(); }
     | REAL_KW { $$ = std::make_shared<ast::RealType>(); }
     | BOOL_KW { $$ = std::make_shared<ast::BoolType>(); }
+    | STRING_KW{ $$ = std::make_shared<ast::StringType>(); }
 ;
 
 ARRAY_TYPE :

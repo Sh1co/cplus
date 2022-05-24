@@ -24,12 +24,14 @@ public:
     void visit(ast::IntType *it) override;
     void visit(ast::RealType *rt) override;
     void visit(ast::BoolType *bt) override;
+    void visit(ast::StringType *it) override;
     void visit(ast::ArrayType *at) override;
     void visit(ast::RecordType *rt) override;
     void visit(ast::FunctionType *ft) override;
     void visit(ast::IntLiteral *il) override;
     void visit(ast::RealLiteral *rl) override;
     void visit(ast::BoolLiteral *bl) override;
+    void visit(ast::StringLiteral *sl) override;
     void visit(ast::VariableDeclaration *vardecl) override;
     void visit(ast::Identifier *id) override;
     void visit(ast::UnaryExpression *exp) override;
@@ -52,13 +54,16 @@ private:
     std::unique_ptr<llvm::IRBuilder<>> builder;
     std::unique_ptr<llvm::Module> module;
     std::map<std::string, llvm::Value*> ptrs_table;
+    std::map<std::string, llvm::Value*> str_ptrs_table;
     std::map<std::string, llvm::Value*> args_table;
     
     llvm::Value *tmp_v, *tmp_p;
     llvm::Type *tmp_t;
     llvm::IntegerType *int_t, *bool_t;
     llvm::Type *real_t;
+    llvm::Type *string_t;
     llvm::Constant *fmt_lld, *fmt_lld_ln, *fmt_f, *fmt_f_ln, *fmt_s, *fmt_s_ln;
+    llvm::Value *tmp_s;
 
     int spaces = 0;
     bool global_vars_pass = true;
@@ -68,6 +73,7 @@ private:
     llvm::Value *pop_v();
     llvm::Value *pop_p();
     llvm::Type *pop_t();
+    llvm::Value *pop_s();
 };
 
 #endif // LLVM_H

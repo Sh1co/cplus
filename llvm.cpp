@@ -43,7 +43,6 @@ IRGenerator::IRGenerator() {
 
 // Emits IR code as "ir.ll"
 void IRGenerator::generate() {
-    module->setTargetTriple(llvm::sys::getDefaultTargetTriple());
 
     std::string msg;
     llvm::raw_string_ostream out(msg);
@@ -71,6 +70,12 @@ llvm::Value *IRGenerator::pop_p() {
 llvm::Type *IRGenerator::pop_t() {
     llvm::Type *t = tmp_t;
     tmp_t = nullptr;
+    return t;
+}
+
+llvm::Value *IRGenerator::pop_s(){
+    llvm::Value *t = tmp_s;
+    tmp_s = nullptr;
     return t;
 }
 
@@ -153,6 +158,23 @@ void IRGenerator::visit(ast::VariableDeclaration *var) {
             return;
         }
 
+        // dtype is a string
+        else if (var->dtype->getType() == ast::TypeEnum::STRING){
+            var->dtype->accept(this);
+            llvm::Value *p;
+            if(var->initial_value){
+                var->initial_value->accept(this);
+                p =pop_s();
+            }
+            else{
+                p = builder->CreateGlobalStringPtr(llvm::StringRef(""), "strVar");
+            }
+            
+            str_ptrs_table[var->name] = p;  // save a pointer to the array str_ptrs_table for later access.
+            BLOCK_E("VariableDeclaration")
+            return; 
+        }
+
         // dtype is primitive
         else if (var->dtype->getType() == ast::TypeEnum::INT ||
                  var->dtype->getType() == ast::TypeEnum::REAL ||
@@ -176,8 +198,18 @@ void IRGenerator::visit(ast::VariableDeclaration *var) {
     // dtype is not given, deduce dtype from initial value
     else {
         var->initial_value->accept(this);
-        initial_value = pop_v();
+
         dtype = pop_t();
+
+        if(dtype == string_t){
+            llvm::Value *p;
+            p =pop_s();
+            str_ptrs_table[var->name] = p;  // save a pointer to the array str_ptrs_table for later access.
+            BLOCK_E("VariableDeclaration")
+            return;
+        }
+
+        initial_value = pop_v();
         
         if(!dtype) {
             GERROR("Cannot deduce variable dtype from initializer")
@@ -266,6 +298,12 @@ void IRGenerator::visit(ast::Identifier *id) {
     }
     else if(ptrs_table[id->name]) {
         p = ptrs_table[id->name];
+    }
+    else if(str_ptrs_table[id->name]){
+        tmp_v = str_ptrs_table[id->name];
+        tmp_t = tmp_v->getType();
+        BLOCK_E("Identifier")
+        return;
     }
     else {
         GERROR(id->name << " is not declared.")
@@ -456,6 +494,10 @@ void IRGenerator::visit(ast::BoolType *bt) {
     tmp_t = bool_t;
 }
 
+void IRGenerator::visit(ast::StringType *st) {
+    tmp_t = string_t;
+}
+
 // Sets tmp_p (pointer to the beginning of array)
 void IRGenerator::visit(ast::ArrayType *at) {
     BLOCK_B("ArrayType")
@@ -521,6 +563,11 @@ void IRGenerator::visit(ast::RealLiteral *rl) {
 void IRGenerator::visit(ast::BoolLiteral *bl) {
     tmp_v = llvm::ConstantInt::get(context, llvm::APInt(1, bl->value, false));
     tmp_t = bool_t;
+}
+
+void IRGenerator::visit(ast::StringLiteral *sl) {
+    tmp_s = builder->CreateGlobalStringPtr(llvm::StringRef(*sl->value), "strVar");
+    tmp_t = string_t;
 }
 
 // Sets tmp_v (the function pointer)
@@ -657,6 +704,9 @@ void IRGenerator::visit(ast::PrintStatement *stmt) {
         else if (dtype->isFloatingPointTy()) {
             fmt = stmt->endl ? fmt_f_ln : fmt_f;
         }
+        else if(dtype->isPointerTy()){
+            fmt = stmt->endl ? fmt_s_ln : fmt_s;
+        }
         else {
             std::cerr << RED << "[LLVM]: [ERROR]: Cannot print " << RESET << std::flush;
             to_print->print(llvm::errs());
@@ -689,14 +739,24 @@ void IRGenerator::visit(ast::PrintStatement *stmt) {
 void IRGenerator::visit(ast::AssignmentStatement *stmt) {
     BLOCK_B("AssignmentStatement")
 
-    // id_loc is a pointer to the modifiable_primary to be accessed
+    
     stmt->id->accept(this);
-    auto id_loc = pop_p();
 
-    // exp is a Value* containing the new data
+    auto isString = pop_t()->isPointerTy();
+
     stmt->exp->accept(this);
-    auto exp = pop_v();
 
+    if(isString){
+        llvm::Value *p = pop_s();
+        str_ptrs_table[stmt->id->name] = p;
+        BLOCK_E("AssignmentStatement")
+        return;
+    }
+    
+    // id_loc is a pointer to the modifiable_primary to be accessed
+    auto id_loc = pop_p();
+    // exp is a Value* containing the new data
+    auto exp = pop_v();
     exp = cast_primitive(exp, builder->CreateLoad(id_loc)->getType(), exp->getType());
     
     builder->CreateStore(exp, id_loc);

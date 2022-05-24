@@ -70,6 +70,11 @@ alphanum   [a-zA-Z_0-9\.]
     return cplus::Parser::make_RECORD();
 }
 
+"string" {
+    LDEBUG("STRING_KW")
+    return cplus::Parser::make_STRING_KW();
+}
+
 "routine" {
     LDEBUG("ROUTINE")
     return cplus::Parser::make_ROUTINE();
