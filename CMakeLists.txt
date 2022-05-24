@@ -9,6 +9,9 @@ find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
+# automatically put the built compiler at the root of the project
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
@@ -25,6 +28,10 @@ add_executable(cplus ${HEADERS} ${SOURCES} ${BISON_MyParser_OUTPUTS} ${FLEX_MySc
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 target_compile_features(cplus PUBLIC cxx_std_17)
+
+# disable warnings
+target_compile_options(cplus PRIVATE "-Wno-inconsistent-missing-override")
+target_compile_options(cplus PRIVATE "-Wno-switch")
 
 target_include_directories(cplus PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 
