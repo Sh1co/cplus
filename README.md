@@ -5,7 +5,7 @@
 
 # Сplus
 
-Compiler for **C+** toy imperative language, based on [LLVM](https://llvm.org/docs/LangRef.html).
+Compiler for **C+** toy imperative language, based on [LLVM](https://llvm.org/docs/LangRef.html) 10.
 
 - For language syntax, semantics, and examples check [documentation.md](./docs/documentation.md)
 - For formal language grammar, check [grammar.md](./docs/grammar.md)
@@ -67,9 +67,9 @@ Compiler for **C+** toy imperative language, based on [LLVM](https://llvm.org/do
 
 ## Compilation from source (Linux)
 
-1. Install prerequisites: `cmake flex bison clang llvm` using the package manager for your distro.
+1. Install prerequisites: `cmake flex bison clang llvm-10` using the package manager for your distro.
 
-   - Example: `sudo apt install cmake flex bison clang llvm`
+   - Example (Ubuntu 20.04 LTS): `sudo apt install cmake flex bison clang llvm`
 
 2. Clone repo
 

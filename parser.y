@@ -13,16 +13,16 @@
 %parse-param { cplus::Lexer &lexer }
 %parse-param { cplus::Shell &shell }
 
-%token VAR ID IS INT_VAL REAL_VAL BOOL_VAL    // var <identifier> is \d+ \d+\.\d+ true|false
-%token TYPE_KW INT_KW REAL_KW BOOL_KW         // type integer real boolean
-%token B_L B_R SB_L SB_R CB_L CB_R            // ( ) [ ] { }
-%token COLON SEMICOLON COMMA DDOT BECOMES     // : ; , . .. :=
-%token PLUS MINUS MUL DIV MOD                 // + - * / %
-%token AND OR XOR NOT                         // and or xor not
-%token LT GT EQ LEQ GEQ NEQ                   // < > = <= >= /=
-%token ARRAY RECORD ROUTINE RETURN END        // array record routine return end
-%token PRINT PRINTLN STRING                   // print println <string>
-%token IF THEN ELSE WHILE FOR IN LOOP REVERSE // if then else while for in loop reverse
+%token VAR ID IS INT_VAL REAL_VAL BOOL_VAL      // var <identifier> is \d+ \d+\.\d+ true|false
+%token TYPE_KW INT_KW REAL_KW BOOL_KW STRING_KW // type integer real boolean string
+%token B_L B_R SB_L SB_R CB_L CB_R              // ( ) [ ] { }
+%token COLON SEMICOLON COMMA DDOT BECOMES       // : ; , . .. :=
+%token PLUS MINUS MUL DIV MOD                   // + - * / %
+%token AND OR XOR NOT                           // and or xor not
+%token LT GT EQ LEQ GEQ NEQ ARROW               // < > = <= >= /= ->
+%token ARRAY RECORD ROUTINE RETURN END          // array record routine return end
+%token PRINT PRINTLN STRING                     // print println <string>
+%token IF THEN ELSE WHILE FOR IN LOOP REVERSE   // if then else while for in loop reverse
 
 %type <std::string> ID STRING
 %type <long long> INT_VAL
@@ -35,7 +35,7 @@
 %type <ast::node_ptr<ast::RoutineDeclaration>> ROUTINE_DECLARATION
 %type <ast::node_ptr<ast::Expression>> EXPRESSION
 %type <std::vector<ast::node_ptr<ast::Expression>>> EXPRESSIONS NON_EMPTY_EXPRESSIONS
-%type <ast::node_ptr<ast::Type>> TYPE PRIMITIVE_TYPE ARRAY_TYPE RECORD_TYPE
+%type <ast::node_ptr<ast::Type>> TYPE PRIMITIVE_TYPE ARRAY_TYPE RECORD_TYPE FUNCTION_TYPE
 %type <ast::node_ptr<ast::Body>> BODY
 %type <ast::node_ptr<ast::Identifier>> MODIFIABLE_PRIMARY
 %type <ast::node_ptr<ast::Statement>> STATEMENT
@@ -53,6 +53,7 @@
 %left AND
 %left EQ NEQ XOR
 %left LT LEQ GT GEQ
+%right ARROW
 %left PLUS MINUS
 %left MUL DIV MOD
 %right NOT
@@ -132,6 +133,10 @@ EXPRESSION :
     INT_VAL                           { $$ = std::make_shared<ast::IntLiteral>($1); }
     | REAL_VAL                        { $$ = std::make_shared<ast::RealLiteral>($1); }
     | BOOL_VAL                        { $$ = std::make_shared<ast::BoolLiteral>($1); }
+    | STRING                          { 
+                                        $1 = $1.substr(1, $1.size()-2);
+                                        $$ = std::make_shared<ast::StringLiteral>(std::make_shared<std::string>($1)); 
+                                      }
     | ROUTINE_CALL                    { PDEBUG("ROUTINE_CALL_EXP") $$ = $1; }
     | B_L EXPRESSION B_R              { $$ = $2; }
     | NOT EXPRESSION                  { $$ = std::make_shared<ast::UnaryExpression>(ast::OperatorEnum::NOT, $2); }
@@ -158,6 +163,8 @@ TYPE :
     PRIMITIVE_TYPE
     | ARRAY_TYPE
     | RECORD_TYPE
+    | FUNCTION_TYPE
+    | CB_L TYPE CB_R { $$ = $2; }
     | ID {
         PDEBUG("ALIASED_TYPE_ACCESS")
         $$ = program->types[$1];
@@ -168,6 +175,7 @@ PRIMITIVE_TYPE :
     INT_KW    { $$ = std::make_shared<ast::IntType>(); }
     | REAL_KW { $$ = std::make_shared<ast::RealType>(); }
     | BOOL_KW { $$ = std::make_shared<ast::BoolType>(); }
+    | STRING_KW{ $$ = std::make_shared<ast::StringType>(); }
 ;
 
 ARRAY_TYPE :
@@ -192,6 +200,13 @@ VARIABLE_DECLARATIONS :
         $2.push_back($1);
         $$ = $2;
     }
+;
+
+FUNCTION_TYPE :
+	TYPE ARROW TYPE {
+		PDEBUG("FUNCTION_TYPE")
+		$$ = std::make_shared<ast::FunctionType>($1, $3);
+	}
 ;
 
 ROUTINE_DECLARATION :

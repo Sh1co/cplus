@@ -26,7 +26,7 @@ alphanum   [a-zA-Z_0-9\.]
     LDEBUG(" ")
 }
 
-[\n]+ {
+[\r\n]+ {
     LDEBUG("\n")
 }
 
@@ -68,6 +68,11 @@ alphanum   [a-zA-Z_0-9\.]
 "record" {
     LDEBUG("RECORD")
     return cplus::Parser::make_RECORD();
+}
+
+"string" {
+    LDEBUG("STRING_KW")
+    return cplus::Parser::make_STRING_KW();
 }
 
 "routine" {
@@ -263,6 +268,11 @@ alphanum   [a-zA-Z_0-9\.]
 "/=" {
     LDEBUG("NEQ")
     return cplus::Parser::make_NEQ();
+}
+
+"->" {
+	LDEBUG("ARROW")
+	return cplus::Parser::make_ARROW();
 }
 
 true {
