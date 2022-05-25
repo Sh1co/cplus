@@ -12,7 +12,24 @@ int Shell::parse_program() {
 }
 
 void Shell::readFrom(std::istream *is) {
-    lexer.switch_streams(is, nullptr);
+    std::ofstream combined("preprocessed.cp");
+    std::ifstream stl("math.hp");
+    while (!stl.eof())
+    {
+        std::string line;
+        std::getline(stl, line);
+        combined << line << "\n";
+    }
+    while (!is->eof())
+    {
+        std::string line;
+        std::getline(*is, line);
+        combined << line << "\n";
+    }
+    combined.close();
+    infile.close();
+    infile = std::ifstream("preprocessed.cp");
+    lexer.switch_streams(&infile, nullptr);
 }
 
 void Shell::show_help() {
