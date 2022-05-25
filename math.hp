@@ -1,0 +1,78 @@
+type int is integer;
+
+routine factorial(x : int) : int is
+    var ret : int is 1;
+    for i in 1 .. x loop
+		ret := (ret * i);
+	end
+    return ret;
+end
+
+routine power(x : real, y : int) : real is
+    var ret : real is 1.0;
+    for i in 1 .. y loop
+		ret := (ret * x);
+	end
+    return ret;
+end
+
+routine sin(x : real) : real is
+    var ret : real is 0;
+    for i in 0 .. 20 loop
+        var neg is power(-1.0, i);
+        var twoN : int is (2 * i);
+        var pow : int is (twoN + 1);
+        var nom is power(x, pow);
+        var dom is factorial(pow);
+        var full is (nom/dom);
+        full := (full * neg);
+		ret := (ret+full);
+	end
+    return ret;
+end
+
+routine cos(x : real) : real is
+    var ret : real is 0;
+    for i in 0 .. 20 loop
+        var neg is power(-1.0, i);
+        var pow : int is (2 * i);
+        var nom is power(x, pow);
+        var dom is factorial(pow);
+        var full is (nom/dom);
+        full := (full * neg);
+		ret := (ret+full);
+	end
+    return ret;
+end
+
+routine tan(x : real) : real is
+    var ret : real is (sin(x) / cos(x));
+    return ret;
+end
+
+routine cot(x : real) : real is
+    var ret : real is (1 / tan(x));
+    return ret;
+end
+
+routine sec(x : real) : real is
+    var ret : real is (1 / cos(x));
+    return ret;
+end
+
+routine csc(x : real) : real is
+    var ret : real is (1 / sin(x));
+    return ret;
+end
+
+routine degToRad(deg : real) : real is
+    var ret : real is (deg / 180);
+    ret := ret * 3.1415926;
+    return ret;
+end
+
+routine radToDeg(rad : real) : real is
+    var ret : real is (rad / 3.1415926);
+    ret := ret * 180;
+    return ret;
+end
