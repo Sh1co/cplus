@@ -743,6 +743,8 @@ void IRGenerator::visit(ast::AssignmentStatement *stmt) {
     stmt->id->accept(this);
 
     auto isString = pop_t()->isPointerTy();
+    // id_loc is a pointer to the modifiable_primary to be accessed
+    auto id_loc = pop_p();
 
     stmt->exp->accept(this);
 
@@ -753,8 +755,6 @@ void IRGenerator::visit(ast::AssignmentStatement *stmt) {
         return;
     }
     
-    // id_loc is a pointer to the modifiable_primary to be accessed
-    auto id_loc = pop_p();
     // exp is a Value* containing the new data
     auto exp = pop_v();
     exp = cast_primitive(exp, builder->CreateLoad(id_loc)->getType(), exp->getType());
