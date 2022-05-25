@@ -41,6 +41,7 @@ Expression :
         IntegerLiteral
         | RealLiteral
         | BooleanLiteral
+        | String
         | ModifiablePrimary
         | RoutineCall
         | "(" Expression ")"
@@ -57,7 +58,7 @@ RoutineCall : Identifier "(" [ Expression { "," Expression } ] ")"
 TypeDeclaration : "type" Identifier "is" Type ";"
 Type : PrimitiveType | ArrayType | RecordType | Identifier
 
-PrimitiveType : "integer" | "real" | "boolean"
+PrimitiveType : "integer" | "real" | "boolean" | "string"
 ArrayType : "array" "[" Expression "]" Type
 
 RecordType :
