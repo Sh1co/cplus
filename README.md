@@ -90,7 +90,7 @@ Compiler for **C+** toy imperative language, based on [LLVM](https://llvm.org/do
 
    ```bash
    cd build
-   ./cplus -d ../tests/1.cp
+   ./cplus -d ../test/1.cp
    ```
 
 5. Help
